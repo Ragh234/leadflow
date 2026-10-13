@@ -64,6 +64,23 @@ export function matchesFollowUpFilter(at: DateInput, filter: FollowUpFilter, now
   }
 }
 
+/**
+ * Splits leads into today's follow-ups (pinned, earliest first) and everything else
+ * (original order). A pinned lead is moved, not duplicated.
+ */
+export function splitPinned<T extends { next_follow_up_at: string | null }>(
+  leads: readonly T[],
+  now: Date,
+): { pinned: T[]; rest: T[] } {
+  const pinned: T[] = [];
+  const rest: T[] = [];
+  for (const lead of leads) {
+    (isFollowUpToday(lead.next_follow_up_at, now) ? pinned : rest).push(lead);
+  }
+  pinned.sort((a, b) => toDate(a.next_follow_up_at)!.getTime() - toDate(b.next_follow_up_at)!.getTime());
+  return { pinned, rest };
+}
+
 /** Combines <input type="date"> and <input type="time"> values, read as local time. */
 export function combineLocalDateAndTime(date: string, time: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return null;

@@ -6,6 +6,7 @@ import {
   isFollowUpOverdue,
   isFollowUpToday,
   matchesFollowUpFilter,
+  splitPinned,
 } from "./follow-up";
 
 // Wednesday 14 Oct 2026, 3:00 PM in India (09:30 UTC).
@@ -129,5 +130,29 @@ describe("followUpPresets", () => {
     const nextMonday = followUpPresets(monday).find((p) => p.label === "Next Monday");
 
     expect(nextMonday?.at.toISOString()).toBe("2026-10-26T04:30:00.000Z");
+  });
+});
+
+describe("splitPinned", () => {
+  const lead = (id: number, next_follow_up_at: string | null) => ({ id, next_follow_up_at });
+
+  it("moves today's follow-ups to the pinned list, earliest first, without duplicating them", () => {
+    const leads = [
+      lead(1, null),
+      lead(2, "2026-10-14T12:30:00Z"), // today 6 PM
+      lead(3, "2026-10-15T04:30:00Z"), // tomorrow
+      lead(4, "2026-10-14T03:30:00Z"), // today 9 AM, overdue but still today
+    ];
+
+    const { pinned, rest } = splitPinned(leads, now);
+
+    expect(pinned.map((l) => l.id)).toEqual([4, 2]);
+    expect(rest.map((l) => l.id)).toEqual([1, 3]);
+  });
+
+  it("does not pin overdue follow-ups from earlier days", () => {
+    const { pinned } = splitPinned([lead(1, "2026-10-13T12:30:00Z")], now);
+
+    expect(pinned).toEqual([]);
   });
 });
