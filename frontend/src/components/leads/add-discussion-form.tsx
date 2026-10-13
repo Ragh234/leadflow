@@ -12,7 +12,9 @@ import { useAddDiscussion } from "@/hooks/use-leads";
 import {
   addLocalDays,
   combineLocalDateAndTime,
+  followUpPresets,
   toDateInputValue,
+  toTimeInputValue,
 } from "@/lib/follow-up";
 import { formatFollowUp } from "@/lib/format";
 
@@ -37,6 +39,12 @@ export function AddDiscussionForm({ leadId, now }: AddDiscussionFormProps) {
       setDate(toDateInputValue(tomorrow));
       setTime("10:00");
     }
+  }
+
+  function applyPreset(at: Date) {
+    setDate(toDateInputValue(at));
+    setTime(toTimeInputValue(at));
+    setWithFollowUp(true);
   }
 
   function submit() {
@@ -129,6 +137,23 @@ export function AddDiscussionForm({ leadId, now }: AddDiscussionFormProps) {
         <Button type="submit" className="ml-auto" disabled={addDiscussion.isPending}>
           {addDiscussion.isPending ? "Saving…" : "Save note"}
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Quick follow-up times">
+        <span className="mr-0.5 text-xs text-slate-500">Quick follow-up:</span>
+        {followUpPresets(now).map((preset) => (
+          <Button
+            key={preset.label}
+            type="button"
+            variant="outline"
+            size="xs"
+            onClick={() => applyPreset(preset.at)}
+            aria-pressed={withFollowUp && date === toDateInputValue(preset.at) && time === toTimeInputValue(preset.at)}
+            className="aria-pressed:border-blue-300 aria-pressed:bg-blue-50 aria-pressed:text-blue-700"
+          >
+            {preset.label}
+          </Button>
+        ))}
       </div>
 
       {error && (
