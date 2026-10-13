@@ -196,7 +196,7 @@ docker-compose.yml
 I built this with **Claude Code** (Anthropic's coding agent), as Pravar's brief encourages. Being specific about what that means:
 
 - **What Claude did:** wrote the plan, code, tests, seed data, Docker setup and this README, and ran everything it claims works: pytest on SQLite and Postgres, Vitest, lint, build, the Playwright walkthrough, a cold `docker compose up` and a click-through of every flow in a browser.
-- **What I did:** set the scope and priorities (required items first, then bonus, then a short list of extras, cutting anything that wasn't worth the time), chose the stack and the wealth-advisory theme for the demo data, made the design calls in the decisions section above, and reviewed the plan, the code and the running app before submitting.
+- **What I did:** wrote the brief Claude worked from (scope, stack, data model, API, follow-up rules, deliverables, and the order: required items first, then bonus). I reviewed its plan and had it cut low-value items and add the extras listed above. I chose the wealth-advisory theme for the demo data, and set the rules for the repo: my own git identity, no AI co-author lines, no planning files.
 - **Where the AI's first attempt was wrong, and how it was caught:**
   - The first version of the clock hook read the time during Next.js prerendering. Next 16 flagged it, and it was rewritten so "now" always comes from the browser.
   - The first idea for the transaction test (one injected failure) would have passed with a broken implementation. It now fails at both writes, and I confirmed it catches a deliberately split commit.
