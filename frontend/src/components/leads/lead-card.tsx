@@ -1,3 +1,4 @@
+import { isFollowUpOverdue } from "@/lib/follow-up";
 import { timeAgo } from "@/lib/format";
 import { isClosed } from "@/lib/status";
 import type { Lead } from "@/lib/types";
@@ -22,6 +23,7 @@ export function LeadCard({ lead, now, pinned = false, onOpen }: LeadCardProps) {
         "w-full rounded-xl border bg-white p-4 text-left shadow-xs transition-[border-color,box-shadow]",
         "hover:border-slate-300 hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         pinned && "border-blue-200 bg-blue-50/70 hover:border-blue-300",
+        !pinned && isFollowUpOverdue(lead.next_follow_up_at, now) && "border-rose-200 hover:border-rose-300",
         !pinned && isClosed(lead.status) && "opacity-60 hover:opacity-100",
       )}
     >

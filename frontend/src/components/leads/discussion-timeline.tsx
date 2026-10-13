@@ -61,7 +61,13 @@ export function DiscussionTimeline({ discussions, isPending, error, leadCreatedA
           <div className="rounded-lg border bg-white p-3 text-sm text-slate-800 shadow-xs">
             <p className="break-words whitespace-pre-wrap">{discussion.note}</p>
             {discussion.follow_up_at && (
-              <FollowUpChip at={discussion.follow_up_at} now={now} prefix="Follow-up set for" className="mt-2" />
+              <FollowUpChip
+                at={discussion.follow_up_at}
+                now={now}
+                prefix="Follow-up set for"
+                historical
+                className="mt-2"
+              />
             )}
           </div>
         </Entry>
