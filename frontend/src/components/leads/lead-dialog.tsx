@@ -1,8 +1,9 @@
 "use client";
 
-import { PhoneIcon } from "lucide-react";
+import { CheckIcon, PhoneIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDiscussions, useLead, useUpdateLead } from "@/hooks/use-leads";
@@ -46,6 +47,16 @@ function LeadDialogBody({ initialLead, now }: { initialLead: Lead; now: Date }) 
     );
   }
 
+  function markFollowUpDone() {
+    updateLead.mutate(
+      { next_follow_up_at: null },
+      {
+        onSuccess: () => toast.success("Follow-up marked done"),
+        onError: (err) => toast.error(`Couldn't update the follow-up: ${err.message}`),
+      },
+    );
+  }
+
   return (
     <DialogContent className="flex max-h-[min(90vh,800px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
       <DialogHeader className="gap-3 border-b px-5 pt-5 pb-4 pr-12 text-left">
@@ -74,8 +85,12 @@ function LeadDialogBody({ initialLead, now }: { initialLead: Lead; now: Date }) 
           </Select>
         </div>
         {lead.next_follow_up_at && (
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
             <FollowUpChip at={lead.next_follow_up_at} now={now} prefix="Next follow-up" />
+            <Button variant="outline" size="xs" onClick={markFollowUpDone} disabled={updateLead.isPending}>
+              <CheckIcon aria-hidden />
+              Mark done
+            </Button>
           </div>
         )}
       </DialogHeader>

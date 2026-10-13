@@ -40,6 +40,8 @@ export interface LeadPatch {
   company?: string | null;
   phone?: string | null;
   status?: LeadStatus;
+  /** null marks the current follow-up as done. */
+  next_follow_up_at?: string | null;
 }
 
 export interface NewDiscussion {
