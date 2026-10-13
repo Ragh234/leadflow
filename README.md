@@ -14,7 +14,7 @@ Built for the Pravar AI full-stack intern assignment with Next.js and FastAPI.
 | **Add lead** | **Overdue filter** |
 | ![Add lead](docs/screenshots/05-add-lead.png) | ![Overdue filter](docs/screenshots/06-overdue-filter.png) |
 
-More: [status change](docs/screenshots/04-status-change.png), [phone width](docs/screenshots/07-mobile.png), and a [demo video](docs/demo.webm) recorded by the end-to-end test.
+More: [status change](docs/screenshots/04-status-change.png), [phone width](docs/screenshots/07-mobile.png), and a [50-second demo video](docs/demo.mp4).
 
 ## What it does
 
@@ -104,7 +104,7 @@ cd frontend && npm run lint && npm run build
 cd frontend && npx playwright install chromium && npm run e2e   # needs the API and web running
 ```
 
-The Playwright walkthrough reseeds the database, clicks through every flow in the brief, checks the result of each step, and saves the screenshots and video in `docs/`.
+The Playwright walkthrough reseeds the database, clicks through every flow in the brief, checks the result of each step, and saves the screenshots in `docs/screenshots/`.
 
 ## API
 
