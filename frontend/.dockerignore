@@ -1,0 +1,7 @@
+node_modules/
+.next/
+coverage/
+AGENTS.md
+CLAUDE.md
+.env*
+npm-debug.log*
