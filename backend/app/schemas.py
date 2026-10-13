@@ -42,6 +42,8 @@ class LeadUpdate(BaseModel):
     company: Company = None
     phone: Phone = None
     status: LeadStatus | None = None
+    # null marks the current follow-up as done; a datetime reschedules it.
+    next_follow_up_at: AwareDatetime | None = None
 
     @field_validator("name", "status")
     @classmethod

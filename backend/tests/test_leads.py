@@ -154,12 +154,31 @@ def test_patch_can_clear_an_optional_field(client, make_lead):
         pytest.param({"name": None}, id="null name"),
         pytest.param({"name": "  "}, id="blank name"),
         pytest.param({"colour": "red"}, id="unknown field"),
+        pytest.param({"next_follow_up_at": "2026-10-20T10:00:00"}, id="follow-up without timezone"),
     ],
 )
 def test_patch_rejects_invalid_input_with_422(client, make_lead, payload):
     lead = make_lead()
 
     assert_validation_error(client.patch(f"/api/leads/{lead['id']}", json=payload))
+
+
+def test_patch_with_null_follow_up_marks_it_done(client, make_lead):
+    lead = make_lead()
+    add_note(client, lead["id"], "Call booked", follow_up_at="2026-10-20T04:30:00Z")
+
+    body = client.patch(f"/api/leads/{lead['id']}", json={"next_follow_up_at": None}).json()
+
+    assert body["next_follow_up_at"] is None
+    assert client.get(f"/api/leads/{lead['id']}").json()["next_follow_up_at"] is None
+
+
+def test_patch_can_reschedule_the_follow_up_in_utc(client, make_lead):
+    lead = make_lead()
+
+    body = client.patch(f"/api/leads/{lead['id']}", json={"next_follow_up_at": "2026-10-20T10:00:00+05:30"}).json()
+
+    assert body["next_follow_up_at"] == "2026-10-20T04:30:00Z"
 
 
 def test_patch_unknown_lead_returns_404(client):
