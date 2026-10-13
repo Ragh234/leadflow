@@ -1,7 +1,8 @@
 import os
 
 # Point the app at a private in-memory database before it is imported.
-os.environ["DATABASE_URL"] = "sqlite://"
+# Set TEST_DATABASE_URL to run the same suite against Postgres (CI does).
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", "sqlite://")
 os.environ["FRONTEND_ORIGIN"] = "http://localhost:3000"
 
 import pytest  # noqa: E402
