@@ -94,8 +94,4 @@ test("a sales rep works through their leads", async ({ page }) => {
     await expect(pinned).toBeVisible();
     await shot(page, "07-mobile");
   });
-
-  const video = page.video();
-  await page.close();
-  await video?.saveAs(path.resolve(__dirname, "../../docs/demo.webm"));
 });

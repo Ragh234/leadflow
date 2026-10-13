@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * End-to-end walkthrough of every flow in the brief. Expects the API on :8000 and the
  * web app on :3000 (see the README); global-setup reseeds the database first so the run
- * is repeatable. Produces docs/screenshots/*.png and docs/demo.webm.
+ * is repeatable. Saves the README screenshots to docs/screenshots/.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -17,7 +17,6 @@ export default defineConfig({
     timezoneId: "Asia/Kolkata",
     locale: "en-IN",
     viewport: { width: 1280, height: 800 },
-    video: { mode: "on", size: { width: 1280, height: 800 } },
     trace: "retain-on-failure",
     launchOptions: { slowMo: Number(process.env.E2E_SLOWMO ?? 150) },
   },
