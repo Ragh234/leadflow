@@ -1,5 +1,7 @@
 # LeadFlow
 
+[![CI](https://github.com/Ragh234/leadflow/actions/workflows/ci.yml/badge.svg)](https://github.com/Ragh234/leadflow/actions/workflows/ci.yml)
+
 A single-screen CRM for a sales rep: every lead in one list, today's follow-ups pinned at the top, and a dialog per lead with the full discussion history, where you log a note, set the next follow-up and change the status.
 
 Built for the Pravar AI full-stack intern assignment with Next.js and FastAPI.
