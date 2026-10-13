@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, StringConstraints, field_validator
+from pydantic import AfterValidator, AwareDatetime, BaseModel, ConfigDict, StringConstraints, field_validator
 
 from app.models import LeadStatus
 
@@ -62,3 +62,21 @@ class LeadRead(BaseModel):
     updated_at: datetime
     last_discussion_note: str | None = None
     last_discussion_at: datetime | None = None
+
+
+class DiscussionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    note: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    # AwareDatetime rejects "2026-10-20T10:00:00": without an offset there is no way to know whose 10 am it is.
+    follow_up_at: AwareDatetime | None = None
+
+
+class DiscussionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    lead_id: int
+    note: str
+    follow_up_at: datetime | None
+    created_at: datetime
