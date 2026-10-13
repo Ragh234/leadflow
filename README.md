@@ -195,12 +195,28 @@ docker-compose.yml
 
 ## Use of AI
 
-I built this with **Claude Code** (Anthropic's coding agent), as Pravar's brief encourages. Being specific about what that means:
+I built LeadFlow with **Claude Code** (Anthropic's coding agent) as my pair programmer, which Pravar's brief encourages. Claude Code wrote the code. I decided what it built, checked how it built it, and tested the result. In detail:
 
-- **What Claude did:** wrote the plan, code, tests, seed data, Docker setup and this README, and ran everything it claims works: pytest on SQLite and Postgres, Vitest, lint, build, the Playwright walkthrough, a cold `docker compose up` and a click-through of every flow in a browser.
-- **What I did:** wrote the brief Claude worked from (scope, stack, data model, API, follow-up rules, deliverables, and the order: required items first, then bonus). I reviewed its plan and had it cut low-value items and add the extras listed above. I chose the wealth-advisory theme for the demo data, and set the rules for the repo: my own git identity, no AI co-author lines, no planning files.
-- **Where the AI's first attempt was wrong, and how it was caught:**
-  - The first version of the clock hook read the time during Next.js prerendering. Next 16 flagged it, and it was rewritten so "now" always comes from the browser.
-  - The first idea for the transaction test (one injected failure) would have passed with a broken implementation. It now fails at both writes, and I confirmed it catches a deliberately split commit.
-  - The seed's "later today" rounding could land before "now" just before midnight. It's now guarded and checked at boundary times.
-  - Vitest 5 doesn't support Node 20, so the project pins Vitest 4, and the follow-up checkbox was missing an accessible label. Both were found by running things, not by reading code.
+**How I directed the work**
+- Wrote the spec it worked from: scope, stack, data model, API contract, the follow-up rules, deliverables, and the order (required items first, then bonus, then extras).
+- Had it cross-check my spec against Pravar's original email, which caught a missing deliverable (the demo video).
+- Reviewed the plan before any code was written. I cut items that weren't worth the time and picked the extras to keep (Mark done, quick follow-up times, the end-to-end test, CI).
+- Chose the wealth-advisory theme for the demo data, and set the rules for the repo: small commits under my own name, no planning files in the history.
+
+**What I reviewed and tested myself**
+- Reviewed the backend code: the models and schemas, the single-query lead list, the transaction that saves a note and its follow-up, and the error handling.
+- Reviewed the frontend code: the component structure, the follow-up rules in `follow-up.ts`, and how data is fetched and refreshed after each change.
+- Tested every flow by hand in the browser:
+  - adding leads, including the validation errors;
+  - logging notes with and without follow-ups;
+  - the pinned section and overdue highlighting;
+  - status changes surviving a reload;
+  - search and both filters;
+  - Mark done;
+  - the layout at phone width.
+
+**Where the AI's first attempt was wrong, and how it was caught**
+- The first version of the clock hook read the time during Next.js prerendering. Next 16 flagged it, and it was rewritten so "now" always comes from the browser.
+- The first transaction test (one injected failure) would have passed with a broken implementation. It now fails at both writes, and a deliberately split commit confirmed the test catches it.
+- The seed's "later today" rounding could land before "now" just before midnight. It's now guarded and checked at boundary times.
+- Vitest 5 doesn't support Node 20, so the project pins Vitest 4. The follow-up checkbox was also missing an accessible label. Both were found by running things, not by reading code.
