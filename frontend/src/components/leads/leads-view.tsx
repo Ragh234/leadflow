@@ -1,9 +1,11 @@
 "use client";
 
-import { PlusIcon, TrendingUpIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, TrendingUpIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLeads } from "@/hooks/use-leads";
 import { useNow } from "@/hooks/use-now";
 import { splitPinned } from "@/lib/follow-up";
@@ -18,15 +20,19 @@ import { StatusFilter, type StatusFilterValue } from "./status-filter";
 export function LeadsView() {
   const now = useNow();
   const [status, setStatus] = useState<StatusFilterValue>("all");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search.trim());
   const [addOpen, setAddOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
 
-  const leadsQuery = useLeads({ status: status === "all" ? undefined : status });
+  const leadsQuery = useLeads({ status: status === "all" ? undefined : status, search: debouncedSearch || undefined });
   const { pinned, rest } = useMemo(
     () => (now ? splitPinned(leadsQuery.data ?? [], now) : { pinned: [], rest: [] }),
     [leadsQuery.data, now],
   );
+
+  const isUnfiltered = status === "all" && !debouncedSearch;
 
   function openLead(lead: Lead) {
     setSelectedLead(lead);
@@ -49,7 +55,20 @@ export function LeadsView() {
       </header>
 
       <main className="mx-auto w-full max-w-4xl flex-1 space-y-8 px-4 py-6 sm:py-8">
-        <StatusFilter value={status} onChange={setStatus} />
+        <div className="space-y-4">
+          <div className="relative max-w-sm">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" aria-hidden />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search leads by name"
+              aria-label="Search leads by name"
+              className="h-9 bg-white pl-9"
+            />
+          </div>
+          <StatusFilter value={status} onChange={setStatus} />
+        </div>
 
         {leadsQuery.isPending || !now ? (
           <LeadListSkeleton />
@@ -71,12 +90,16 @@ export function LeadsView() {
               pinned.length === 0 && (
                 <div className="rounded-xl border border-dashed bg-white p-10 text-center">
                   <p className="font-medium text-slate-700">
-                    {status === "all" ? "No leads yet" : `No ${STATUS_META[status].label} leads`}
+                    {debouncedSearch
+                      ? `No leads match "${debouncedSearch}"`
+                      : status === "all"
+                        ? "No leads yet"
+                        : `No ${STATUS_META[status].label} leads`}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    {status === "all" ? "Add your first lead to start tracking discussions." : "Try another filter."}
+                    {isUnfiltered ? "Add your first lead to start tracking discussions." : "Try another search or filter."}
                   </p>
-                  {status === "all" && (
+                  {isUnfiltered && (
                     <Button className="mt-4" onClick={() => setAddOpen(true)}>
                       <PlusIcon aria-hidden />
                       Add new lead
