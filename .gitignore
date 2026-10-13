@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.db
+
+# Node
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+!.env.example
+
+# Playwright
+test-results/
+playwright-report/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
