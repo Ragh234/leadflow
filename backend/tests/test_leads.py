@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 
 import pytest
+from sqlalchemy import event
+
+from app.db import engine
 
 
 def assert_validation_error(response):
@@ -8,6 +11,18 @@ def assert_validation_error(response):
     detail = response.json()["detail"]
     assert isinstance(detail, list) and detail
     assert {"loc", "msg", "type"} <= detail[0].keys()
+
+
+def add_note(client, lead_id, note="Called", **fields):
+    response = client.post(f"/api/leads/{lead_id}/discussions", json={"note": note, **fields})
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def list_names(client, **params):
+    response = client.get("/api/leads", params=params)
+    assert response.status_code == 200, response.text
+    return [lead["name"] for lead in response.json()]
 
 
 # --- POST /api/leads ---------------------------------------------------------
@@ -152,3 +167,107 @@ def test_patch_unknown_lead_returns_404(client):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Lead not found"}
+
+
+# --- GET /api/leads ----------------------------------------------------------
+
+
+def test_list_leads_is_empty_at_first(client):
+    response = client.get("/api/leads")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_includes_the_latest_discussion_note_and_time(client, make_lead):
+    lead = make_lead()
+    add_note(client, lead["id"], "First call")
+    latest = add_note(client, lead["id"], "Sent the proposal deck")
+
+    [row] = client.get("/api/leads").json()
+
+    assert row["last_discussion_note"] == "Sent the proposal deck"
+    assert row["last_discussion_at"] == latest["created_at"]
+
+
+def test_list_shows_null_last_discussion_for_a_lead_without_notes(client, make_lead):
+    make_lead()
+
+    [row] = client.get("/api/leads").json()
+
+    assert row["last_discussion_note"] is None
+    assert row["last_discussion_at"] is None
+
+
+def test_get_and_patch_also_return_the_latest_discussion(client, make_lead):
+    lead = make_lead()
+    add_note(client, lead["id"], "Sent the proposal deck")
+
+    fetched = client.get(f"/api/leads/{lead['id']}").json()
+    patched = client.patch(f"/api/leads/{lead['id']}", json={"status": "proposal_sent"}).json()
+
+    assert fetched["last_discussion_note"] == "Sent the proposal deck"
+    assert patched["last_discussion_note"] == "Sent the proposal deck"
+
+
+def test_list_puts_the_most_recently_active_lead_first(client, make_lead):
+    older = make_lead(name="Older lead")
+    make_lead(name="Newer lead")
+
+    add_note(client, older["id"], "Just spoke to them")
+
+    assert list_names(client) == ["Older lead", "Newer lead"]
+
+
+def test_list_filters_by_status(client, make_lead):
+    make_lead(name="Fresh", status="new")
+    make_lead(name="Closed", status="won")
+
+    assert list_names(client, status="won") == ["Closed"]
+
+
+def test_list_with_an_unknown_status_returns_422(client):
+    assert_validation_error(client.get("/api/leads", params={"status": "maybe"}))
+
+
+def test_search_matches_part_of_the_name_case_insensitively(client, make_lead):
+    make_lead(name="Priya Nair")
+    make_lead(name="Arjun Menon")
+
+    assert list_names(client, search="PRI") == ["Priya Nair"]
+
+
+def test_search_treats_sql_wildcards_literally(client, make_lead):
+    make_lead(name="100% Returns Desk")
+    make_lead(name="Arjun Menon")
+
+    assert list_names(client, search="%") == ["100% Returns Desk"]
+
+
+def test_search_and_status_filter_combine(client, make_lead):
+    make_lead(name="Priya Nair", status="won")
+    make_lead(name="Priya Shah", status="new")
+
+    assert list_names(client, search="priya", status="new") == ["Priya Shah"]
+
+
+def test_list_fetches_leads_and_their_latest_discussion_in_one_query(client, make_lead):
+    for i in range(5):
+        lead = make_lead(name=f"Lead {i}")
+        for n in range(3):
+            add_note(client, lead["id"], f"note {n}")
+
+    statements: list[str] = []
+
+    def record(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        response = client.get("/api/leads")
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+
+    assert response.status_code == 200
+    assert {row["last_discussion_note"] for row in response.json()} == {"note 2"}
+    assert len(statements) == 1, statements
