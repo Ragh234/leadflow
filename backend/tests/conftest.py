@@ -23,3 +23,13 @@ def fresh_db():
 def client():
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def make_lead(client):
+    def _make(**fields):
+        response = client.post("/api/leads", json={"name": "Test Lead", **fields})
+        assert response.status_code == 201, response.text
+        return response.json()
+
+    return _make
